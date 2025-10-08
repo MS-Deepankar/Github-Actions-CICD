@@ -118,5 +118,29 @@ jobs:
         push: true
         tags: deepankarms/bankapp:latest
         file: ./Dockerfile
+  deploy_to_kubernetes:
+    runs-on: self-hosted
+    needs: builds_docker_image_and_push
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: latest
+    
+    - name: Get AKS credentials
+      run: |
+        az aks get-credentials --resource-group rg-product-catalog --name aks-product-catalog --overwrite-existing
+    
+    - name: Deploy to AKS
+      run: |
+        kubectl apply -f ds.yml
 
 
