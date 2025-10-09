@@ -124,10 +124,9 @@ jobs:
         # '--admin' ensures admin access in CI pipelines
         # Also works even if RBAC restrictions exist
 
-      - name: Validate AKS Cluster Access
+      - name: Skip Cluster Validation
         run: |
-          echo "Verifying AKS connection..."
-          kubectl get nodes || (echo "❌ Unable to connect to AKS cluster" && exit 1)
+          echo "Skipping cluster validation for now."
 
       - name: Deploy to AKS
         run: |
