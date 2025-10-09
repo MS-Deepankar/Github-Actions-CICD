@@ -80,11 +80,12 @@ jobs:
         with:
           name: app-jar
           path: app  # this will download JAR to ./app folder
-      - name: Login to Docker Hub
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -94,7 +95,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: deepankarms/bankapp:latest
+          tags: ghcr.io/${{ github.repository_owner }}/bankapp:latest
           file: ./Dockerfile
 
   deploy_to_kubernetes:
@@ -121,8 +122,6 @@ jobs:
             --name aks-product-catalog \
             --overwrite-existing \
             --admin
-        # '--admin' ensures admin access in CI pipelines
-        # Also works even if RBAC restrictions exist
 
       - name: Skip Cluster Validation
         run: |
@@ -132,4 +131,4 @@ jobs:
         run: |
           echo "Deploying application..."
           kubectl apply -f ds.yml --validate=false
-          kubectl rollout status deployment/<your-deployment-name> --timeout=120s || true
+          kubectl rollout status deployment/bankapp-deployment --timeout=120s || true
