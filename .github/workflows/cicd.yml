@@ -75,27 +75,37 @@ jobs:
     needs: build_project
     steps:
       - uses: actions/checkout@v4
+
       - name: Download JAR artifact
         uses: actions/download-artifact@v4
         with:
           name: app-jar
           path: app  # this will download JAR to ./app folder
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Normalize owner name to lowercase
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
       - name: Build and Push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner.toLowerCase() }}/bankapp:latest
+          tags: |
+            ghcr.io/${{ env.OWNER }}/bankapp:latest
+            ghcr.io/${{ env.OWNER }}/bankapp:${{ github.sha }}
           file: ./Dockerfile
 
   deploy_to_kubernetes:
@@ -124,8 +134,7 @@ jobs:
             --admin
 
       - name: Skip Cluster Validation
-        run: |
-          echo "Skipping cluster validation for now."
+        run: echo "Skipping cluster validation for now."
 
       - name: Deploy to AKS
         run: |
