@@ -11,7 +11,7 @@ jobs:
       
       - name: Test ARC
         run: |
-          echo "🎉 Running on ARC self-hosted runner!"
+          echo " Running on ARC self-hosted runner!"
           echo "Runner OS: ${{ runner.os }}"
           echo "Runner Name: ${{ runner.name }}"
           uname -a
