@@ -4,6 +4,9 @@ on:
   push:
     branches: [ "main" ]
 
+env:
+  OWNER: ""
+
 jobs:
   compile:
     runs-on: ubuntu-latest
@@ -115,6 +118,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Normalize owner name to lowercase
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -133,11 +139,9 @@ jobs:
             --overwrite-existing \
             --admin
 
-      - name: Skip Cluster Validation
-        run: echo "Skipping cluster validation for now."
-
       - name: Deploy to AKS
         run: |
           echo "Deploying application..."
-          kubectl apply -f ds.yml --validate=false
-          kubectl rollout status deployment/bankapp-deployment --timeout=120s || true
+          kubectl apply -f ds.yml
+          kubectl set image deployment/bankapp bankapp=ghcr.io/${{ env.OWNER }}/bankapp:${{ github.sha }}
+          kubectl rollout status deployment/bankapp --timeout=120s

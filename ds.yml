@@ -20,12 +20,29 @@ spec:
         name: mysql
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "Test@123"
+          valueFrom:
+            secretKeyRef:
+              name: bankapp-secrets
+              key: mysql-root-password
         - name: MYSQL_DATABASE
           value: "bankappdb"
         ports:
         - containerPort: 3306
           name: mysql
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1
+            memory: 1Gi
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql-data
 ---
 # MySQL Service
 apiVersion: v1
@@ -55,7 +72,7 @@ spec:
     spec:
       containers:
       - name: bankapp
-        image: adijaiswal/bankapp:latest
+        image: ghcr.io/replace-with-your-owner/bankapp:latest
         ports:
         - containerPort: 8080
         env:
@@ -64,7 +81,17 @@ spec:
         - name: SPRING_DATASOURCE_USERNAME
           value: root
         - name: SPRING_DATASOURCE_PASSWORD
-          value: Test@123
+          valueFrom:
+            secretKeyRef:
+              name: bankapp-secrets
+              key: mysql-root-password
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1
+            memory: 1Gi
 ---
 # Bank Application Service
 apiVersion: v1
@@ -78,3 +105,15 @@ spec:
     targetPort: 8080
   selector:
     app: bankapp
+---
+# MySQL Persistent Storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

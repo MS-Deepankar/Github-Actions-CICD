@@ -14,8 +14,17 @@ public class Account implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    private Long version;
+
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
+
+    @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal balance;
 
     @OneToMany(mappedBy = "account")
@@ -51,6 +60,10 @@ public class Account implements UserDetails {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     public String getUsername() {
